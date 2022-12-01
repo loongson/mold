@@ -22,6 +22,8 @@ struct PPC64V2;
 struct S390X;
 struct SPARC64;
 struct M68K;
+struct LOONGARCH32;
+struct LOONGARCH64;
 
 template <typename E> struct ElfSym;
 template <typename E> struct ElfShdr;
@@ -40,25 +42,27 @@ static constexpr u32 R_NONE = 0;
 
 enum class MachineType {
   NONE, X86_64, I386, ARM64, ARM32, RV64LE, RV64BE, RV32LE, RV32BE,
-  PPC64V1, PPC64V2, S390X, SPARC64, M68K
+  PPC64V1, PPC64V2, S390X, SPARC64, M68K, LOONGARCH32, LOONGARCH64,
 };
 
 inline std::ostream &operator<<(std::ostream &out, MachineType mt) {
   switch (mt) {
-  case MachineType::NONE:    out << "none";      break;
-  case MachineType::X86_64:  out << "x86_64";    break;
-  case MachineType::I386:    out << "i386";      break;
-  case MachineType::ARM64:   out << "arm64";     break;
-  case MachineType::ARM32:   out << "arm32";     break;
-  case MachineType::RV64LE:  out << "riscv64";   break;
-  case MachineType::RV64BE:  out << "riscv64be"; break;
-  case MachineType::RV32LE:  out << "riscv32";   break;
-  case MachineType::RV32BE:  out << "riscv32be"; break;
-  case MachineType::PPC64V1: out << "ppc64v1";   break;
-  case MachineType::PPC64V2: out << "ppc64v2";   break;
-  case MachineType::S390X:   out << "s390x";     break;
-  case MachineType::SPARC64: out << "sparc64";   break;
-  case MachineType::M68K:    out << "m68k";      break;
+  case MachineType::NONE:         out << "none";          break;
+  case MachineType::X86_64:       out << "x86_64";        break;
+  case MachineType::I386:         out << "i386";          break;
+  case MachineType::ARM64:        out << "arm64";         break;
+  case MachineType::ARM32:        out << "arm32";         break;
+  case MachineType::RV64LE:       out << "riscv64";       break;
+  case MachineType::RV64BE:       out << "riscv64be";     break;
+  case MachineType::RV32LE:       out << "riscv32";       break;
+  case MachineType::RV32BE:       out << "riscv32be";     break;
+  case MachineType::PPC64V1:      out << "ppc64v1";       break;
+  case MachineType::PPC64V2:      out << "ppc64v2";       break;
+  case MachineType::S390X:        out << "s390x";         break;
+  case MachineType::SPARC64:      out << "sparc64";       break;
+  case MachineType::M68K:         out << "m68k";          break;
+  case MachineType::LOONGARCH64:  out << "loongarch64";   break;
+  case MachineType::LOONGARCH32:  out << "loongarch32";   break;
   }
   return out;
 }
@@ -190,6 +194,7 @@ static constexpr u32 EM_SPARC64 = 43;
 static constexpr u32 EM_X86_64 = 62;
 static constexpr u32 EM_AARCH64 = 183;
 static constexpr u32 EM_RISCV = 243;
+static constexpr u32 EM_LOONGARCH = 258;
 
 static constexpr u32 EI_CLASS = 4;
 static constexpr u32 EI_DATA = 5;
@@ -311,6 +316,13 @@ static constexpr u32 EF_SPARC_HAL_R1 = 0x000400;
 static constexpr u32 EF_SPARC_SUN_US3 = 0x000800;
 
 static constexpr u32 STO_RISCV_VARIANT_CC = 0x80;
+
+static constexpr u32 EF_LOONGARCH_ABI_SOFT_FLOAT = 0x1;
+static constexpr u32 EF_LOONGARCH_ABI_SINGLE_FLOAT = 0x2;
+static constexpr u32 EF_LOONGARCH_ABI_DOUBLE_FLOAT = 0x3;
+static constexpr u32 EF_LOONGARCH_ABI_MODIFIER_MASK = 0x7;
+static constexpr u32 EF_LOONGARCH_OBJABI_V1 = 0x40;
+static constexpr u32 EF_LOONGARCH_OBJABI_MASK = 0xC0;
 
 //
 // Relocation types
@@ -1750,6 +1762,197 @@ inline std::string rel_to_string<M68K>(u32 r_type) {
   return "unknown (" + std::to_string(r_type) + ")";
 }
 
+static constexpr u32 R_LARCH_NONE = 0;
+static constexpr u32 R_LARCH_32 = 1;
+static constexpr u32 R_LARCH_64 = 2;
+static constexpr u32 R_LARCH_RELATIVE = 3;
+static constexpr u32 R_LARCH_COPY = 4;
+static constexpr u32 R_LARCH_JUMP_SLOT = 5;
+static constexpr u32 R_LARCH_TLS_DTPMOD32 = 6;
+static constexpr u32 R_LARCH_TLS_DTPMOD64 = 7;
+static constexpr u32 R_LARCH_TLS_DTPREL32 = 8;
+static constexpr u32 R_LARCH_TLS_DTPREL64 = 9;
+static constexpr u32 R_LARCH_TLS_TPREL32 = 10;
+static constexpr u32 R_LARCH_TLS_TPREL64 = 11;
+static constexpr u32 R_LARCH_IRELATIVE = 12;
+static constexpr u32 R_LARCH_MARK_LA = 20;
+static constexpr u32 R_LARCH_MARK_PCREL = 21;
+static constexpr u32 R_LARCH_SOP_PUSH_PCREL = 22;
+static constexpr u32 R_LARCH_SOP_PUSH_ABSOLUTE = 23;
+static constexpr u32 R_LARCH_SOP_PUSH_DUP = 24;
+static constexpr u32 R_LARCH_SOP_PUSH_GPREL = 25;
+static constexpr u32 R_LARCH_SOP_PUSH_TLS_TPREL = 26;
+static constexpr u32 R_LARCH_SOP_PUSH_TLS_GOT = 27;
+static constexpr u32 R_LARCH_SOP_PUSH_TLS_GD = 28;
+static constexpr u32 R_LARCH_SOP_PUSH_PLT_PCREL = 29;
+static constexpr u32 R_LARCH_SOP_ASSERT = 30;
+static constexpr u32 R_LARCH_SOP_NOT = 31;
+static constexpr u32 R_LARCH_SOP_SUB = 32;
+static constexpr u32 R_LARCH_SOP_SL = 33;
+static constexpr u32 R_LARCH_SOP_SR = 34;
+static constexpr u32 R_LARCH_SOP_ADD = 35;
+static constexpr u32 R_LARCH_SOP_AND = 36;
+static constexpr u32 R_LARCH_SOP_IF_ELSE = 37;
+static constexpr u32 R_LARCH_SOP_POP_32_S_10_5 = 38;
+static constexpr u32 R_LARCH_SOP_POP_32_U_10_12 = 39;
+static constexpr u32 R_LARCH_SOP_POP_32_S_10_12 = 40;
+static constexpr u32 R_LARCH_SOP_POP_32_S_10_16 = 41;
+static constexpr u32 R_LARCH_SOP_POP_32_S_10_16_S2 = 42;
+static constexpr u32 R_LARCH_SOP_POP_32_S_5_20 = 43;
+static constexpr u32 R_LARCH_SOP_POP_32_S_0_5_10_16_S2 = 44;
+static constexpr u32 R_LARCH_SOP_POP_32_S_0_10_10_16_S2 = 45;
+static constexpr u32 R_LARCH_SOP_POP_32_U = 46;
+static constexpr u32 R_LARCH_ADD8 = 47;
+static constexpr u32 R_LARCH_ADD16 = 48;
+static constexpr u32 R_LARCH_ADD24 = 49;
+static constexpr u32 R_LARCH_ADD32 = 50;
+static constexpr u32 R_LARCH_ADD64 = 51;
+static constexpr u32 R_LARCH_SUB8 = 52;
+static constexpr u32 R_LARCH_SUB16 = 53;
+static constexpr u32 R_LARCH_SUB24 = 54;
+static constexpr u32 R_LARCH_SUB32 = 55;
+static constexpr u32 R_LARCH_SUB64 = 56;
+static constexpr u32 R_LARCH_GNU_VTINHERIT = 57;
+static constexpr u32 R_LARCH_GNU_VTENTRY = 58;
+static constexpr u32 R_LARCH_B16 = 64;
+static constexpr u32 R_LARCH_B21 = 65;
+static constexpr u32 R_LARCH_B26 = 66;
+static constexpr u32 R_LARCH_ABS_HI20 = 67;
+static constexpr u32 R_LARCH_ABS_LO12 = 68;
+static constexpr u32 R_LARCH_ABS64_LO20 = 69;
+static constexpr u32 R_LARCH_ABS64_HI12 = 70;
+static constexpr u32 R_LARCH_PCALA_HI20 = 71;
+static constexpr u32 R_LARCH_PCALA_LO12 = 72;
+static constexpr u32 R_LARCH_PCALA64_LO20 = 73;
+static constexpr u32 R_LARCH_PCALA64_HI12 = 74;
+static constexpr u32 R_LARCH_GOT_PC_HI20 = 75;
+static constexpr u32 R_LARCH_GOT_PC_LO12 = 76;
+static constexpr u32 R_LARCH_GOT64_PC_LO20 = 77;
+static constexpr u32 R_LARCH_GOT64_PC_HI12 = 78;
+static constexpr u32 R_LARCH_GOT_HI20 = 79;
+static constexpr u32 R_LARCH_GOT_LO12 = 80;
+static constexpr u32 R_LARCH_GOT64_LO20 = 81;
+static constexpr u32 R_LARCH_GOT64_HI12 = 82;
+static constexpr u32 R_LARCH_TLS_LE_HI20 = 83;
+static constexpr u32 R_LARCH_TLS_LE_LO12 = 84;
+static constexpr u32 R_LARCH_TLS_LE64_LO20 = 85;
+static constexpr u32 R_LARCH_TLS_LE64_HI12 = 86;
+static constexpr u32 R_LARCH_TLS_IE_PC_HI20 = 87;
+static constexpr u32 R_LARCH_TLS_IE_PC_LO12 = 88;
+static constexpr u32 R_LARCH_TLS_IE64_PC_LO20 = 89;
+static constexpr u32 R_LARCH_TLS_IE64_PC_HI12 = 90;
+static constexpr u32 R_LARCH_TLS_IE_HI20 = 91;
+static constexpr u32 R_LARCH_TLS_IE_LO12 = 92;
+static constexpr u32 R_LARCH_TLS_IE64_LO20 = 93;
+static constexpr u32 R_LARCH_TLS_IE64_HI12 = 94;
+static constexpr u32 R_LARCH_TLS_LD_PC_HI20 = 95;
+static constexpr u32 R_LARCH_TLS_LD_HI20 = 96;
+static constexpr u32 R_LARCH_TLS_GD_PC_HI20 = 97;
+static constexpr u32 R_LARCH_TLS_GD_HI20 = 98;
+static constexpr u32 R_LARCH_32_PCREL = 99;
+static constexpr u32 R_LARCH_RELAX = 100;
+
+template <>
+inline std::string rel_to_string<LOONGARCH64>(u32 r_type) {
+  switch (r_type) {
+  case R_LARCH_NONE: return "R_LARCH_NONE";
+  case R_LARCH_32: return "R_LARCH_32";
+  case R_LARCH_64: return "R_LARCH_64";
+  case R_LARCH_RELATIVE: return "R_LARCH_RELATIVE";
+  case R_LARCH_COPY: return "R_LARCH_COPY";
+  case R_LARCH_JUMP_SLOT: return "R_LARCH_JUMP_SLOT";
+  case R_LARCH_TLS_DTPMOD32: return "R_LARCH_TLS_DTPMOD32";
+  case R_LARCH_TLS_DTPMOD64: return "R_LARCH_TLS_DTPMOD64";
+  case R_LARCH_TLS_DTPREL32: return "R_LARCH_TLS_DTPREL32";
+  case R_LARCH_TLS_DTPREL64: return "R_LARCH_TLS_DTPREL64";
+  case R_LARCH_TLS_TPREL32: return "R_LARCH_TLS_TPREL32";
+  case R_LARCH_TLS_TPREL64: return "R_LARCH_TLS_TPREL64";
+  case R_LARCH_IRELATIVE: return "R_LARCH_IRELATIVE";
+  case R_LARCH_MARK_LA: return "R_LARCH_MARK_LA";
+  case R_LARCH_MARK_PCREL: return "R_LARCH_MARK_PCREL";
+  case R_LARCH_SOP_PUSH_PCREL: return "R_LARCH_SOP_PUSH_PCREL";
+  case R_LARCH_SOP_PUSH_ABSOLUTE: return "R_LARCH_SOP_PUSH_ABSOLUTE";
+  case R_LARCH_SOP_PUSH_DUP: return "R_LARCH_SOP_PUSH_DUP";
+  case R_LARCH_SOP_PUSH_GPREL: return "R_LARCH_SOP_PUSH_GPREL";
+  case R_LARCH_SOP_PUSH_TLS_TPREL: return "R_LARCH_SOP_PUSH_TLS_TPREL";
+  case R_LARCH_SOP_PUSH_TLS_GOT: return "R_LARCH_SOP_PUSH_TLS_GOT";
+  case R_LARCH_SOP_PUSH_TLS_GD: return "R_LARCH_SOP_PUSH_TLS_GD";
+  case R_LARCH_SOP_PUSH_PLT_PCREL: return "R_LARCH_SOP_PUSH_PLT_PCREL";
+  case R_LARCH_SOP_ASSERT: return "R_LARCH_SOP_ASSERT";
+  case R_LARCH_SOP_NOT: return "R_LARCH_SOP_NOT";
+  case R_LARCH_SOP_SUB: return "R_LARCH_SOP_SUB";
+  case R_LARCH_SOP_SL: return "R_LARCH_SOP_SL";
+  case R_LARCH_SOP_SR: return "R_LARCH_SOP_SR";
+  case R_LARCH_SOP_ADD: return "R_LARCH_SOP_ADD";
+  case R_LARCH_SOP_AND: return "R_LARCH_SOP_AND";
+  case R_LARCH_SOP_IF_ELSE: return "R_LARCH_SOP_IF_ELSE";
+  case R_LARCH_SOP_POP_32_S_10_5: return "R_LARCH_SOP_POP_32_S_10_5";
+  case R_LARCH_SOP_POP_32_U_10_12: return "R_LARCH_SOP_POP_32_U_10_12";
+  case R_LARCH_SOP_POP_32_S_10_12: return "R_LARCH_SOP_POP_32_S_10_12";
+  case R_LARCH_SOP_POP_32_S_10_16: return "R_LARCH_SOP_POP_32_S_10_16";
+  case R_LARCH_SOP_POP_32_S_10_16_S2: return "R_LARCH_SOP_POP_32_S_10_16_S2";
+  case R_LARCH_SOP_POP_32_S_5_20: return "R_LARCH_SOP_POP_32_S_5_20";
+  case R_LARCH_SOP_POP_32_S_0_5_10_16_S2: return "R_LARCH_SOP_POP_32_S_0_5_10_16_S2";
+  case R_LARCH_SOP_POP_32_S_0_10_10_16_S2: return "R_LARCH_SOP_POP_32_S_0_10_10_16_S2";
+  case R_LARCH_SOP_POP_32_U: return "R_LARCH_SOP_POP_32_U";
+  case R_LARCH_ADD8: return "R_LARCH_ADD8";
+  case R_LARCH_ADD16: return "R_LARCH_ADD16";
+  case R_LARCH_ADD24: return "R_LARCH_ADD24";
+  case R_LARCH_ADD32: return "R_LARCH_ADD32";
+  case R_LARCH_ADD64: return "R_LARCH_ADD64";
+  case R_LARCH_SUB8: return "R_LARCH_SUB8";
+  case R_LARCH_SUB16: return "R_LARCH_SUB16";
+  case R_LARCH_SUB24: return "R_LARCH_SUB24";
+  case R_LARCH_SUB32: return "R_LARCH_SUB32";
+  case R_LARCH_SUB64: return "R_LARCH_SUB64";
+  case R_LARCH_GNU_VTINHERIT: return "R_LARCH_GNU_VTINHERIT";
+  case R_LARCH_GNU_VTENTRY: return "R_LARCH_GNU_VTENTRY";
+  case R_LARCH_B16: return "R_LARCH_B16";
+  case R_LARCH_B21: return "R_LARCH_B21";
+  case R_LARCH_B26: return "R_LARCH_B26";
+  case R_LARCH_ABS_HI20: return "R_LARCH_ABS_HI20";
+  case R_LARCH_ABS_LO12: return "R_LARCH_ABS_LO12";
+  case R_LARCH_ABS64_LO20: return "R_LARCH_ABS64_LO20";
+  case R_LARCH_ABS64_HI12: return "R_LARCH_ABS64_HI12";
+  case R_LARCH_PCALA_HI20: return "R_LARCH_PCALA_HI20";
+  case R_LARCH_PCALA_LO12: return "R_LARCH_PCALA_LO12";
+  case R_LARCH_PCALA64_LO20: return "R_LARCH_PCALA64_LO20";
+  case R_LARCH_PCALA64_HI12: return "R_LARCH_PCALA64_HI12";
+  case R_LARCH_GOT_PC_HI20: return "R_LARCH_GOT_PC_HI20";
+  case R_LARCH_GOT_PC_LO12: return "R_LARCH_GOT_PC_LO12";
+  case R_LARCH_GOT64_PC_LO20: return "R_LARCH_GOT64_PC_LO20";
+  case R_LARCH_GOT64_PC_HI12: return "R_LARCH_GOT64_PC_HI12";
+  case R_LARCH_GOT_HI20: return "R_LARCH_GOT_HI20";
+  case R_LARCH_GOT_LO12: return "R_LARCH_GOT_LO12";
+  case R_LARCH_GOT64_LO20: return "R_LARCH_GOT64_LO20";
+  case R_LARCH_GOT64_HI12: return "R_LARCH_GOT64_HI12";
+  case R_LARCH_TLS_LE_HI20: return "R_LARCH_TLS_LE_HI20";
+  case R_LARCH_TLS_LE_LO12: return "R_LARCH_TLS_LE_LO12";
+  case R_LARCH_TLS_LE64_LO20: return "R_LARCH_TLS_LE64_LO20";
+  case R_LARCH_TLS_LE64_HI12: return "R_LARCH_TLS_LE64_HI12";
+  case R_LARCH_TLS_IE_PC_HI20: return "R_LARCH_TLS_IE_PC_HI20";
+  case R_LARCH_TLS_IE_PC_LO12: return "R_LARCH_TLS_IE_PC_LO12";
+  case R_LARCH_TLS_IE64_PC_LO20: return "R_LARCH_TLS_IE64_PC_LO20";
+  case R_LARCH_TLS_IE64_PC_HI12: return "R_LARCH_TLS_IE64_PC_HI12";
+  case R_LARCH_TLS_IE_HI20: return "R_LARCH_TLS_IE_HI20";
+  case R_LARCH_TLS_IE_LO12: return "R_LARCH_TLS_IE_LO12";
+  case R_LARCH_TLS_IE64_LO20: return "R_LARCH_TLS_IE64_LO20";
+  case R_LARCH_TLS_IE64_HI12: return "R_LARCH_TLS_IE64_HI12";
+  case R_LARCH_TLS_LD_PC_HI20: return "R_LARCH_TLS_LD_PC_HI20";
+  case R_LARCH_TLS_LD_HI20: return "R_LARCH_TLS_LD_HI20";
+  case R_LARCH_TLS_GD_PC_HI20: return "R_LARCH_TLS_GD_PC_HI20";
+  case R_LARCH_TLS_GD_HI20: return "R_LARCH_TLS_GD_HI20";
+  case R_LARCH_32_PCREL: return "R_LARCH_32_PCREL";
+  case R_LARCH_RELAX: return "R_LARCH_RELAX";
+  }
+  return "unknown (" + std::to_string(r_type) + ")";
+}
+
+template <>
+inline std::string rel_to_string<LOONGARCH32>(u32 r_type) {
+  return rel_to_string<LOONGARCH64>(r_type);
+}
+
 //
 // DWARF data types
 //
@@ -2445,6 +2648,10 @@ static constexpr bool is_s390x = std::is_same_v<E, S390X>;
 template <typename E>
 static constexpr bool is_m68k = std::is_same_v<E, M68K>;
 
+template <typename E>
+static constexpr bool is_loongarch = std::is_same_v<E, LOONGARCH64> ||
+  std::is_same_v<E, LOONGARCH32>;
+
 struct X86_64 {
   static constexpr u32 R_COPY = R_X86_64_COPY;
   static constexpr u32 R_GLOB_DAT = R_X86_64_GLOB_DAT;
@@ -2933,5 +3140,77 @@ template <> struct ElfVerdef<M68K>  : EBVerdef {};
 template <> struct ElfVerdaux<M68K> : EBVerdaux {};
 template <> struct ElfChdr<M68K>    : EB32Chdr {};
 template <> struct ElfNhdr<M68K>    : EBNhdr {};
+
+struct LOONGARCH64 {
+  static constexpr u32 R_COPY = R_LARCH_COPY;
+  static constexpr u32 R_GLOB_DAT = R_LARCH_64;
+  static constexpr u32 R_JUMP_SLOT = R_LARCH_JUMP_SLOT;
+  static constexpr u32 R_ABS = R_LARCH_64;
+  static constexpr u32 R_RELATIVE = R_LARCH_RELATIVE;
+  static constexpr u32 R_IRELATIVE = R_LARCH_IRELATIVE;
+  static constexpr u32 R_DTPOFF = R_LARCH_TLS_DTPREL64;
+  static constexpr u32 R_TPOFF = R_LARCH_TLS_TPREL64;
+  static constexpr u32 R_DTPMOD = R_LARCH_TLS_DTPMOD64;
+
+  static constexpr MachineType machine_type = MachineType::LOONGARCH64;
+  static constexpr bool is_64 = true;
+  static constexpr bool is_le = true;
+  static constexpr u32 page_size = 16384;
+  static constexpr u32 e_machine = EM_LOONGARCH;
+  static constexpr u32 plt_hdr_size = 32;
+  static constexpr u32 plt_size = 16;
+  static constexpr u32 pltgot_size = 16;
+
+  static constexpr u32 tls_dtp_offset = 0;
+};
+
+template <> struct ElfSym<LOONGARCH64>     : EL64Sym {};
+template <> struct ElfShdr<LOONGARCH64>    : EL64Shdr {};
+template <> struct ElfEhdr<LOONGARCH64>    : EL64Ehdr {};
+template <> struct ElfPhdr<LOONGARCH64>    : EL64Phdr {};
+template <> struct ElfRel<LOONGARCH64>     : EL64Rela { using EL64Rela::EL64Rela; };
+template <> struct ElfDyn<LOONGARCH64>     : EL64Dyn {};
+template <> struct ElfVerneed<LOONGARCH64> : ELVerneed {};
+template <> struct ElfVernaux<LOONGARCH64> : ELVernaux {};
+template <> struct ElfVerdef<LOONGARCH64>  : ELVerdef {};
+template <> struct ElfVerdaux<LOONGARCH64> : ELVerdaux {};
+template <> struct ElfChdr<LOONGARCH64>    : EL64Chdr {};
+template <> struct ElfNhdr<LOONGARCH64>    : ELNhdr {};
+
+struct LOONGARCH32 {
+  static constexpr u32 R_COPY = R_LARCH_COPY;
+  static constexpr u32 R_GLOB_DAT = R_LARCH_32;
+  static constexpr u32 R_JUMP_SLOT = R_LARCH_JUMP_SLOT;
+  static constexpr u32 R_ABS = R_LARCH_32;
+  static constexpr u32 R_RELATIVE = R_LARCH_RELATIVE;
+  static constexpr u32 R_IRELATIVE = R_LARCH_IRELATIVE;
+  static constexpr u32 R_DTPOFF = R_LARCH_TLS_DTPREL32;
+  static constexpr u32 R_TPOFF = R_LARCH_TLS_TPREL32;
+  static constexpr u32 R_DTPMOD = R_LARCH_TLS_DTPMOD32;
+
+  static constexpr MachineType machine_type = MachineType::LOONGARCH32;
+  static constexpr bool is_64 = false;
+  static constexpr bool is_le = true;
+  static constexpr u32 page_size = 16384;
+  static constexpr u32 e_machine = EM_LOONGARCH;
+  static constexpr u32 plt_hdr_size = 32;
+  static constexpr u32 plt_size = 16;
+  static constexpr u32 pltgot_size = 16;
+
+  static constexpr u32 tls_dtp_offset = 0;
+};
+
+template <> struct ElfSym<LOONGARCH32>     : EL32Sym {};
+template <> struct ElfShdr<LOONGARCH32>    : EL32Shdr {};
+template <> struct ElfEhdr<LOONGARCH32>    : EL32Ehdr {};
+template <> struct ElfPhdr<LOONGARCH32>    : EL32Phdr {};
+template <> struct ElfRel<LOONGARCH32>     : EL32Rela { using EL32Rela::EL32Rela; };
+template <> struct ElfDyn<LOONGARCH32>     : EL32Dyn {};
+template <> struct ElfVerneed<LOONGARCH32> : ELVerneed {};
+template <> struct ElfVernaux<LOONGARCH32> : ELVernaux {};
+template <> struct ElfVerdef<LOONGARCH32>  : ELVerdef {};
+template <> struct ElfVerdaux<LOONGARCH32> : ELVerdaux {};
+template <> struct ElfChdr<LOONGARCH32>    : EL32Chdr {};
+template <> struct ElfNhdr<LOONGARCH32>    : ELNhdr {};
 
 } // namespace mold::elf
