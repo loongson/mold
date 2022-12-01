@@ -228,6 +228,8 @@ static void init_thread_pointers(Context<E> &ctx, ElfPhdr<E> phdr) {
     ctx.tp_addr = align_down(phdr.p_vaddr - sizeof(Word<E>) * 2, phdr.p_align);
   } else if constexpr (is_ppc<E> || is_m68k<E>) {
     ctx.tp_addr = phdr.p_vaddr + 0x7000;
+  } else if constexpr (is_loongarch<E>) {
+    ctx.tp_addr = phdr.p_vaddr;
   } else {
     static_assert(is_riscv<E>);
     ctx.tp_addr = phdr.p_vaddr;
